@@ -171,6 +171,32 @@ assert(expiring && expiring[0].expireAt === new Date(REAL_EXPIRY).toISOString(),
 const bal = mod.normalizeBalance({ summary: { nextExpiryAt: SENTINEL } }, null, null)
 assert(bal.nextExpiryAt === null, 'nextExpiryAt 上的哨兵同样归一为 null', bal.nextExpiryAt)
 
+// ---- 7. 会到期 / 长期有效 的派生合计 ----
+// 平台 expiringBalanceCny 把长期有效的额度也算了进去（名字与语义不符），
+// 所以插件按 expiresAt 自己切一刀。这组断言用实测数额做基准。
+console.log('7) 会到期 / 长期有效')
+const wAll = mod.normalizeWalletCredits({
+  data: {
+    summary: { expiringBalanceCny: '109.325489', nextExpiryAt: REAL_EXPIRY },
+    rechargePrincipal: { sourceLabel: '充值本金', grantedCny: '50', consumedCny: '0', remainingCny: '50', status: 'ACTIVE', expiresAt: null },
+    list: [
+      { id: 'a', sourceLabel: '充值活动赠额', grantedCny: '50', consumedCny: '0', remainingCny: '50', status: 'ACTIVE', expiresAt: SENTINEL },
+      { id: 'b', sourceLabel: '邀请奖励', grantedCny: '58', consumedCny: '0', remainingCny: '58', status: 'ACTIVE', expiresAt: REAL_EXPIRY },
+      { id: 'c', sourceLabel: '实名认证奖励', grantedCny: '18', consumedCny: '16.674511', remainingCny: '1.325489', status: 'ACTIVE', expiresAt: REAL_EXPIRY },
+      { id: 'd', sourceLabel: '旧邀请', grantedCny: '68', consumedCny: '68', remainingCny: '0', status: 'USED_UP', expiresAt: REAL_EXPIRY },
+      { id: 'e', sourceLabel: '过期奖励', grantedCny: '68', consumedCny: '68', remainingCny: '0', status: 'EXPIRED', expiresAt: REAL_EXPIRY },
+    ],
+    total: 5,
+  },
+})
+const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-6
+assert(near(wAll.summary.expiringRealCny, 59.325489), '会到期 = 真实到期日那几笔之和', wAll.summary.expiringRealCny)
+assert(near(wAll.summary.permanentCny, 100), '长期有效 = 本金 50 + 哨兵赠额 50', wAll.summary.permanentCny)
+assert(near(wAll.summary.expiringBalanceCny, 109.325489), '平台字段原样保留（不改写）', wAll.summary.expiringBalanceCny)
+assert(!near(wAll.summary.expiringRealCny, wAll.summary.expiringBalanceCny), '派生值与平台字段确实不同（否则等于没切）')
+// USED_UP / EXPIRED / remaining=0 一律不进任何一边
+assert(near(wAll.summary.expiringRealCny + wAll.summary.permanentCny, 159.325489), '两边之和 = 全部未花额度（9 位小数级一致）')
+
 // ---- 汇总 ----
 if (failures > 0) {
   console.log(`\n冒烟失败：${failures} 项`)
