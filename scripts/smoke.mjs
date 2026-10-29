@@ -140,6 +140,37 @@ if (typeof pick !== 'function') {
   assert(hits >= 4, '三条路由都走 pickScopedProvider', `只找到 ${hits} 处（含定义，期望 ≥4）`)
 }
 
+// ---- 6. 到期时间哨兵（长期有效不能被渲染成「到期 2099-12-31」）----
+// 平台对长期有效的额度回 expiresAt = 2099-12-31T15:59:59Z。它不是日期而是占位，
+// 平台自己的额度页显示「长期有效」；插件若照渲染，客户端 fmtDay 只打 M-D，
+// 会退化成「到期 12-31」——看着像本月月底。
+console.log('6) 到期时间哨兵')
+const SENTINEL = '2099-12-31T15:59:59.000Z'
+const REAL_EXPIRY = '2026-11-26T03:41:26.252Z'
+const walletJson = {
+  data: {
+    summary: { nextExpiryAt: REAL_EXPIRY },
+    list: [
+      { id: 'a', source: 'recharge_bonus', sourceLabel: '充值活动赠额', grantedCny: '50', consumedCny: '0', remainingCny: '50', status: 'ACTIVE', expiresAt: SENTINEL },
+      { id: 'b', source: 'invite', sourceLabel: '邀请奖励', grantedCny: '58', consumedCny: '0', remainingCny: '58', status: 'ACTIVE', expiresAt: REAL_EXPIRY },
+    ],
+    total: 2,
+  },
+}
+const w = mod.normalizeWalletCredits(walletJson)
+const bonus = (w.items || []).find((it) => it.id === 'a')
+const invite = (w.items || []).find((it) => it.id === 'b')
+assert(bonus && bonus.expiresAt === null, '长期有效（2099 哨兵）归一为 null', bonus && bonus.expiresAt)
+assert(invite && invite.expiresAt !== null, '真实到期日照常保留', invite && invite.expiresAt)
+assert(bonus && invite && bonus.grantedCny === 50, '哨兵不影响金额解析')
+
+const expiring = mod.normalizeExpiringCredits(walletJson)
+assert(Array.isArray(expiring) && expiring.length === 1, '哨兵条目不进临期列表', JSON.stringify(expiring && expiring.length))
+assert(expiring && expiring[0].expireAt === new Date(REAL_EXPIRY).toISOString(), '临期列表只剩真实到期的那条')
+
+const bal = mod.normalizeBalance({ summary: { nextExpiryAt: SENTINEL } }, null, null)
+assert(bal.nextExpiryAt === null, 'nextExpiryAt 上的哨兵同样归一为 null', bal.nextExpiryAt)
+
 // ---- 汇总 ----
 if (failures > 0) {
   console.log(`\n冒烟失败：${failures} 项`)
