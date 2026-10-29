@@ -113,6 +113,39 @@ if (typeof handler !== 'function') {
   }
 }
 
+// ---- 4b. 明文凭据路由 fail-closed ----
+// 这五条回传的东西能直接拿去登录平台（密码）或调用 API（密钥）。它们不能跟其余路由
+// 共用 fail-open 的门：没有 Sec-Fetch-Site 就拒，浏览器（same-origin/none）不受影响。
+console.log('4b) 明文凭据路由 fail-closed')
+const reqFor = (url, site, method) => ({
+  method: method || 'GET',
+  url,
+  headers: site === null ? {} : { 'sec-fetch-site': site },
+  [Symbol.asyncIterator]: async function* () {},
+})
+const SENSITIVE = [
+  ['account/password?account=x', 'GET'],
+  ['key?provider=tokenrhythm', 'GET'],
+  ['key-reveal', 'GET'],
+  ['keys/reveal?id=x', 'GET'],
+  ['keys/create', 'POST'],
+]
+if (typeof handler === 'function') {
+  for (const [p, m] of SENSITIVE) {
+    const bare = makeRes()
+    try { await handler(reqFor('/dsh-tokenrhythm-bill/' + p, null, m), bare) } catch { /* 拦截前不该抛 */ }
+    assert(bare.status === 403, `${p.split('?')[0]} 无头 → 403`, `got ${bare.status}`)
+
+    const browser = makeRes()
+    try { await handler(reqFor('/dsh-tokenrhythm-bill/' + p, 'same-origin', m), browser) } catch { /* 允许 handler 内部异常 */ }
+    assert(browser.status !== 403, `${p.split('?')[0]} same-origin → 放行`, `got ${browser.status}`)
+  }
+  // 非敏感路由必须保持原来的 fail-open：旧 WebView / 脚本还在用
+  const openRes = makeRes()
+  try { await handler(reqFor('/dsh-tokenrhythm-bill/prefs', null), openRes) } catch { /* 允许内部异常 */ }
+  assert(openRes.status !== 403, 'prefs 无头仍放行（fail-open 不变）', `got ${openRes.status}`)
+}
+
 // ---- 5. provider 作用域（R1/R2 回归锁）----
 // /key、/models、/model-check 只能碰基元。这三处曾各自手写 find 且都漏了过滤，
 // 所以口径收进 pickScopedProvider 并在这里锁死：谁改宽谁红。
