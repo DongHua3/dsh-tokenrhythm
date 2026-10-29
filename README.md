@@ -27,26 +27,6 @@ dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
 
 装完**必须重启 DSH**。装在本地目录时，把 `github:...` 换成目录路径即可。
 
-## 为什么是「单渠道」
-
-<p align="center">
-  <img src="./assets/readme/channels.svg" width="100%" alt="五家渠道只保留 tokenrhythm：stepfun、zcode、tierflow、opencsg 被删除">
-</p>
-
-删除不是藏起来，是**物理删除**——模块、路由、页签、外链按钮全部不见：
-
-<details>
-<summary>删掉的具体范围</summary>
-
-- `lib/step.js`、`lib/tierflow.js`、`lib/opencsg.js`、`lib/zcode.js` —— 文件已删
-- `/dsh-tokenrhythm-bill/stepfun/*`、`/tierflow/*`、`/opencsg/*`、`/zcode/*` —— 全部路由（请求返回 404）
-- `index.js` 里四家的实现、净化器、会话池、持久化分支
-- `client.js` 里四家的页签 UI 与三个外链按钮（`opencsg.com` / `tierflow.cn` / `platform.stepfun.com`）
-- `SYS_KEYS` 由 `['tr','step','zcode','tf','oc']` 收窄为 `['tr']`
-- 输入行的「计划模式 / 压缩上下文」两个快捷按钮，与设置里的「系统管理」分组
-
-</details>
-
 ## 功能一览
 
 | 功能 | 说明 |
@@ -91,9 +71,11 @@ node scripts/smoke.mjs
 
 语法 / 加载 / 路由注册 / 跨站拦截四项，CI 在每次 push 时跑同一支脚本。
 
-## 已知缺陷
+## 已知问题
 
-ESLint `no-undef` 报 3 处：`client.js` 的 `cur`、`setTfPlansScope`、`setStepKeyCreated`。三者都有定义，属于作用域分析误报；后两者所在分支已被 `SYS_KEYS=['tr']` 判死，不会执行。这是上游 0.7.5 原样带过来的，不是本项目引入。
+`npm run lint` 当前是 **0 error / 96 warning**，没有一条 `no-undef`。96 条全是 `no-unused-vars`，集中在 `lib/client.js`：`tf*`、`step*`、`oc*`、`zc*` 这些是删掉四家渠道后没跟着扫掉的孤儿函数与 hook，剩下来不影响运行，只是死代码。
+
+CI 用的是 `--quiet`，只报 error，所以这些警告不会让流水线变红——也正因为这样，删完之后没人再数一遍。
 
 ## 与上游的关系
 
