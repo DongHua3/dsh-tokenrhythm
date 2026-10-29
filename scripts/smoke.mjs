@@ -230,6 +230,13 @@ assert(!near(wAll.summary.expiringRealCny, wAll.summary.expiringBalanceCny), '�
 // USED_UP / EXPIRED / remaining=0 一律不进任何一边
 assert(near(wAll.summary.expiringRealCny + wAll.summary.permanentCny, 159.325489), '两边之和 = 全部未花额度（9 位小数级一致）')
 
+// 排序：长期有效聚在列表头上，会到期的按临近程度往后排。
+// （之前把 null 当 Infinity 垫底，导致长期有效的条目被拆到列表首尾两处。）
+const orderIds = wAll.items.filter((it) => it.status === 'ACTIVE' && it.remainingCny > 0).map((it) => it.id)
+assert(orderIds[0] === 'a', '长期有效排在会到期的前面', JSON.stringify(orderIds))
+const realTimes = wAll.items.filter((it) => it.expiresAt !== null).map((it) => Date.parse(it.expiresAt))
+assert(JSON.stringify(realTimes) === JSON.stringify(realTimes.slice().sort((x, y) => x - y)), '会到期的仍按时间升序')
+
 // ---- 汇总 ----
 if (failures > 0) {
   console.log(`\n冒烟失败：${failures} 项`)
