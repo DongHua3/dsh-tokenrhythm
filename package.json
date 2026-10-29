@@ -1,0 +1,52 @@
+{
+  "name": "dsh-tokenrhythm-bill",
+  "version": "0.1.0",
+  "description": "基元律动费用中心（个人维护版）：账户余额与限时额度、模型价格卡、近 30 天用量热力日历、连通检测与密钥管理。仅保留基元律动（tokenrhythm）一家渠道。凭据只存本机 host。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "image",
+    "cordis.patch.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "models",
+    "balance",
+    "usage",
+    "tokenrhythm",
+    "status",
+    "dashboard"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DongHua3/dsh-tokenrhythm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DongHua3/dsh-tokenrhythm/issues"
+  },
+  "homepage": "https://github.com/DongHua3/dsh-tokenrhythm#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {},
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  }
+}
