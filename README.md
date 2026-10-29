@@ -53,7 +53,7 @@ https://api.github.com                        # 同上，最后兜底（tags 列
 
 ## 版本与更新
 
-版本号 `0.1.0` 起，与上游脱钩。
+版本号 `0.1.x` 起，与上游脱钩。
 
 「检查更新」的版本源就是**本仓库 `main` 分支的 `package.json`** —— push 一个更高的
 `version` 即生效，不必发 release。检查结果本地缓存 24h，失败时降级显示上次结果。
@@ -82,6 +82,14 @@ dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
 
 ESLint `no-undef` 报 3 处：`client.js` 的 `cur`、`setTfPlansScope`、`setStepKeyCreated`。
 三者都有定义，属于作用域分析误报；后两者所在分支已被 `SYS_KEYS=['tr']` 判死，不会执行。
+
+## 本地检查
+
+```sh
+node scripts/smoke.mjs
+```
+
+语法 / 加载 / 路由注册 / 跨站拦截四项，CI 在每次 push 时跑同一脚本。
 
 ## 许可
 
