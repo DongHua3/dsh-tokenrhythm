@@ -14,7 +14,8 @@ jobs:
           node-version: '20'
       - name: 冒烟（语法 / 加载 / 路由 / 跨站 / provider 作用域）
         run: node scripts/smoke.mjs
-      # 只栅 host 端三个文件：client.js 有 2 处上游遗留的作用域分析误报（cur）与
-      # 94 处四家渠道残留的死变量（被守卫短路、永不执行），纳入门禁会被噪声淹没。
-      - name: Lint（host 端）
+      # --quiet 只报 error 级（no-undef），不报 no-unused-vars 的 warn：
+      # client.js 还留着 94 处四家渠道残留的死变量（被守卫短路、永不执行），
+      # 那些是已知的，不该把真正的「变量拼错/忘了传参」淹掉。
+      - name: Lint
         run: npm run lint
