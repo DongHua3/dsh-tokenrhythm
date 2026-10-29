@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "env": { "browser": true, "node": true, "es2022": true },
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "module" },
+  "globals": { "React": "readonly" },
+  "rules": {
+    "no-undef": "error",
+    "no-unused-vars": ["warn", { "args": "none", "vars": "all", "ignoreRestSiblings": true }]
+  }
+}

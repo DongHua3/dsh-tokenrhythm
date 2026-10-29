@@ -12,5 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: 冒烟（语法 / 加载 / 路由 / 跨站）
+      - name: 冒烟（语法 / 加载 / 路由 / 跨站 / provider 作用域）
         run: node scripts/smoke.mjs
+      # 只栅 host 端三个文件：client.js 有 2 处上游遗留的作用域分析误报（cur）与
+      # 94 处四家渠道残留的死变量（被守卫短路、永不执行），纳入门禁会被噪声淹没。
+      - name: Lint（host 端）
+        run: npm run lint

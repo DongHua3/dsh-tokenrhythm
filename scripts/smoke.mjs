@@ -12,6 +12,7 @@
  * 没有 ~/.dsh 的 CI 容器里同样可跑。
  */
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -110,6 +111,33 @@ if (typeof handler !== 'function') {
       pass(`Sec-Fetch-Site: ${site === null ? '(无头)' : site} → 放行（handler 内部异常，非 403）`)
     }
   }
+}
+
+// ---- 5. provider 作用域（R1/R2 回归锁）----
+// /key、/models、/model-check 只能碰基元。这三处曾各自手写 find 且都漏了过滤，
+// 所以口径收进 pickScopedProvider 并在这里锁死：谁改宽谁红。
+console.log('5) provider 作用域')
+const pick = mod.pickScopedProvider
+const roster = [
+  { id: 'tokenrhythm', baseURL: 'https://tokenrhythm.studio/v1', balanceCapable: true },
+  { id: 'henry', baseURL: 'https://api.henry.test/v1', balanceCapable: false },
+  { id: 'flagstr', baseURL: 'https://x.test/v1', balanceCapable: 'true' },
+  { id: 'noflag', baseURL: '' },
+]
+if (typeof pick !== 'function') {
+  fail('pickScopedProvider 已导出', `got ${typeof pick}`)
+} else {
+  assert(pick(roster, 'tokenrhythm') === roster[0], '基元 id 命中')
+  assert(pick(roster, 'henry') === null, '非基元 id 被拒')
+  assert(pick(roster, 'flagstr') === null, 'balanceCapable 为真值字符串也拒（必须 === true）')
+  assert(pick(roster, 'noflag') === null, '缺 balanceCapable 被拒')
+  assert(pick(roster, '') === null, '空 id 不做隐式兜底')
+  assert(pick(roster, 'TOKENRHYTHM') === null, 'id 不做大小写归一')
+  assert(pick(null, 'tokenrhythm') === null, '名册非数组返回 null')
+  // 源码级：三条路由都必须走这个函数（定义算 1 处，调用应再出现 3 处）
+  const srcIndex = readFileSync(join(root, 'lib/index.js'), 'utf8')
+  const hits = (srcIndex.match(/\bpickScopedProvider\(/g) || []).length
+  assert(hits >= 4, '三条路由都走 pickScopedProvider', `只找到 ${hits} 处（含定义，期望 ≥4）`)
 }
 
 // ---- 汇总 ----
