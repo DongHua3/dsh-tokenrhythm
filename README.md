@@ -21,11 +21,16 @@
 ## 装上
 
 ```sh
-dsh plugin --profile desktop remove dsh-tokenrhythm-bill
 dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
 ```
 
 装完**必须重启 DSH**。装在本地目录时，把 `github:...` 换成目录路径即可。
+
+从 0.1.x 升上来的先摘掉旧包——0.2.0 换了包名与插件 id，两个名字不会互相顶替：
+
+```sh
+dsh plugin --profile desktop remove dsh-tokenrhythm-bill
+```
 
 ## 功能一览
 
@@ -50,7 +55,7 @@ dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
 
 ## 凭据与出网
 
-凭据只落在 host 进程：`~/.dsh/tokenrhythm-bill-state.json`，首次写入即 `mode 0o600`。Cookie / 密码 / 密钥不经浏览器，也不上传任何第三方。
+凭据只落在 host 进程：`~/.dsh/tokenrhythm-bill-state.json`（文件名沿用改名前的，升级不丢登录），首次写入即 `mode 0o600`。Cookie / 密码 / 密钥不经浏览器，也不上传任何第三方。
 
 出网域名只有四条：
 
@@ -79,7 +84,15 @@ CI 用的是 `--quiet`，只报 error，所以这些警告不会让流水线变�
 
 ## 与上游的关系
 
-fork 自 [162568316/dsh-tokenrhythm-bill](https://github.com/162568316/dsh-tokenrhythm-bill) v0.7.5（MIT），版本号从 `0.1.x` 起与上游脱钩。包名仍为 `dsh-tokenrhythm-bill`——它必须和 `cordis.patch.yml` 里的 `name` 一致；仓库名才是本项目自己的。
+fork 自 [162568316/dsh-tokenrhythm-bill](https://github.com/162568316/dsh-tokenrhythm-bill) v0.7.5（MIT），版本号从 `0.1.x` 起与上游脱钩。
+
+0.2.0 起三个身份都和上游分开了，所以两份能装在一起：
+
+| | 本项目 | 上游 |
+| --- | --- | --- |
+| 包名 | `dsh-tokenrhythm` | `dsh-tokenrhythm-bill` |
+| cordis id | `donghua-tokenrhythm` | `tokenrhythm-bill` |
+| HTTP 路由前缀 | `/dsh-tokenrhythm/*` | `/dsh-tokenrhythm-bill/*` |
 
 ## 许可
 

@@ -5,7 +5,7 @@
  * 不启动宿主、不读 ~/.dsh、不联网：
  *   - node --check 四个 lib 文件
  *   - import 模块，断言 name / apply
- *   - 假 ctx 调 apply，断言只注册 prefix /dsh-tokenrhythm-bill
+ *   - 假 ctx 调 apply，断言只注册 prefix /dsh-tokenrhythm
  *   - 假 req 打三种 Sec-Fetch-Site，断言跨站得 403
  *
  * 403 分支在全部 handler 之前就 return，不会触碰 state 文件，所以在
@@ -17,7 +17,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const EXPECTED_ROUTE = 'prefix /dsh-tokenrhythm-bill'
+const EXPECTED_ROUTE = 'prefix /dsh-tokenrhythm'
 
 let failures = 0
 const pass = (name) => console.log(`  ok   ${name}`)
@@ -42,7 +42,7 @@ for (const f of ['lib/index.js', 'lib/client.js', 'lib/common.js', 'lib/creds.js
 // ---- 2. 加载 ----
 console.log('2) 模块加载')
 const mod = await import(pathToFileURL(join(root, 'lib/index.js')).href)
-assert(mod.name === 'dsh-tokenrhythm-bill', 'name 导出正确', `got ${String(mod.name)}`)
+assert(mod.name === 'dsh-tokenrhythm', 'name 导出正确', `got ${String(mod.name)}`)
 assert(typeof mod.apply === 'function', 'apply 是函数')
 
 // ---- 3. 路由注册 ----
@@ -79,7 +79,7 @@ assert(routes[0] === EXPECTED_ROUTE, `路由是 ${EXPECTED_ROUTE}`, String(route
 console.log('4) 跨站拦截')
 const makeReq = (secFetchSite) => {
   const headers = secFetchSite === null ? {} : { 'sec-fetch-site': secFetchSite }
-  return { method: 'GET', url: '/dsh-tokenrhythm-bill/manifest', headers, [Symbol.asyncIterator]: async function* () {} }
+  return { method: 'GET', url: '/dsh-tokenrhythm/manifest', headers, [Symbol.asyncIterator]: async function* () {} }
 }
 const makeRes = () => {
   const res = { status: 0, body: '' }
@@ -133,16 +133,16 @@ const SENSITIVE = [
 if (typeof handler === 'function') {
   for (const [p, m] of SENSITIVE) {
     const bare = makeRes()
-    try { await handler(reqFor('/dsh-tokenrhythm-bill/' + p, null, m), bare) } catch { /* 拦截前不该抛 */ }
+    try { await handler(reqFor('/dsh-tokenrhythm/' + p, null, m), bare) } catch { /* 拦截前不该抛 */ }
     assert(bare.status === 403, `${p.split('?')[0]} 无头 → 403`, `got ${bare.status}`)
 
     const browser = makeRes()
-    try { await handler(reqFor('/dsh-tokenrhythm-bill/' + p, 'same-origin', m), browser) } catch { /* 允许 handler 内部异常 */ }
+    try { await handler(reqFor('/dsh-tokenrhythm/' + p, 'same-origin', m), browser) } catch { /* 允许 handler 内部异常 */ }
     assert(browser.status !== 403, `${p.split('?')[0]} same-origin → 放行`, `got ${browser.status}`)
   }
   // 非敏感路由必须保持原来的 fail-open：旧 WebView / 脚本还在用
   const openRes = makeRes()
-  try { await handler(reqFor('/dsh-tokenrhythm-bill/prefs', null), openRes) } catch { /* 允许内部异常 */ }
+  try { await handler(reqFor('/dsh-tokenrhythm/prefs', null), openRes) } catch { /* 允许内部异常 */ }
   assert(openRes.status !== 403, 'prefs 无头仍放行（fail-open 不变）', `got ${openRes.status}`)
 }
 
