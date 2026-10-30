@@ -20,17 +20,29 @@
 
 ## 装上
 
-```sh
-dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
+**桌面版**：在 App 的插件管理器里「添加插件」，粘贴
+
+```
+github:DongHua3/dsh-tokenrhythm
 ```
 
-装完**必须重启 DSH**。装在本地目录时，把 `github:...` 换成目录路径即可。
-
-从 0.1.x 升上来的先摘掉旧包——0.2.0 换了包名与插件 id，两个名字不会互相顶替：
+**命令行**：只对 `web` 这类 profile 有效。桌面版的 `desktop` profile 由 App 独占，CLI 会以 `profile "desktop" is managed exclusively by the Electron application` 拒绝写入——
 
 ```sh
-dsh plugin --profile desktop remove dsh-tokenrhythm-bill
+dsh plugin --profile web add github:DongHua3/dsh-tokenrhythm
 ```
+
+装完**必须重启 DSH**。装本地目录时把 `github:...` 换成目录路径。
+
+从 0.1.x 升上来的，先在插件管理器里移除旧插件 `dsh-tokenrhythm-bill` 再装。0.2.0 换了包名与 cordis id，新包不会顶替旧行——不移除的话侧栏会出现两条入口。
+
+## 兼容性
+
+| 项 | 要求 |
+| --- | --- |
+| DSH | 宿主需同时提供 `webServer` 与 web GUI；在桌面版 0.2.1-rc.3 上实测 |
+| Node | ≥ 20（`package.json` 的 `engines`） |
+| 系统 | 代码里没有平台专属调用，目前只在 Windows 上验证过 |
 
 ## 功能一览
 
@@ -40,6 +52,7 @@ dsh plugin --profile desktop remove dsh-tokenrhythm-bill
 | 账号管理 | 多账号、密码登录、Cookie 粘贴、自动续期 |
 | 连通检测 | 真实 1-token 探测，**默认关闭**，手动开启才会计费 |
 | 余额角标 | 侧栏入口右侧直接显示在用密钥的账户余额 |
+| 快捷键 | `Ctrl/Cmd + J` 开合面板（网页版 `Ctrl/Cmd + Alt + J`，网页版 Linux 默认不绑），可在 DSH 快捷键设置里改 |
 
 <p align="center">
   <img src="./assets/readme/header-badge.png" width="295" alt="侧栏入口「基元律动-费用中心」右侧的余额角标">
@@ -49,9 +62,7 @@ dsh plugin --profile desktop remove dsh-tokenrhythm-bill
 
 「检查更新」的版本源就是**本仓库 `main` 分支的 `package.json`**：push 一个更高的 `version` 即生效，不用发 release。检查结果本地缓存 24 小时，拉取失败时降级显示上次结果。
 
-```sh
-dsh plugin --profile desktop add github:DongHua3/dsh-tokenrhythm
-```
+更新就是再装一次：插件管理器里把 `github:DongHua3/dsh-tokenrhythm` 重新添加，或走上面的命令行（`web` profile）。
 
 ## 凭据与出网
 
